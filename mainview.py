@@ -43,8 +43,13 @@ if __name__ == '__main__':
     tree = DocumentTreeView()
     tree.connectview(v)
     tree.connectcreatecatdiag(createcatdiag)
+    tree.selectionclb = lambda x: v.read(x)
 
     db = ReqDatabase()
+    v.readfunc = lambda uid: db.root.find_item(uid).text
+    def savefunc(uid, text):
+        db.root.find_item(uid).text = text
+    v.savefunc = savefunc
     db.add_listeners([tree, createcatdiag])
 
     splitter.addWidget(tree)

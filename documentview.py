@@ -32,20 +32,11 @@ class DocumentTreeView(QWidget):
         catselgrid.addWidget(self.catselector)
         catselgrid.addWidget(self.newcatbtn)
 
+        self.selectionclb = None
         oldSelectionChanged = self.tree.selectionChanged
         def selectionChanged(selected, deselected):
-            if self.editview is not None:
-                si = selected.indexes()
-                di = deselected.indexes()
-                if selected and deselected:
-                    if len(di) > 0:
-                        data = self.model.data(di[0], Qt.UserRole)
-                        data.text = self.editview.text()
-                if len(si) > 0:
-                    data = self.model.data(si[0], Qt.UserRole)
-                    self.editview.settext(data.text)
-                else:
-                    self.editview.settext('')
+            if self.selectionclb is not None:
+                self.selectionclb(self.selecteduid())
 
             oldSelectionChanged(selected, deselected)
         self.tree.selectionChanged = selectionChanged

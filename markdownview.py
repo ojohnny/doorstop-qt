@@ -4,6 +4,7 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from icon import Icon
 
 
 class SimpleMarkdownHighlighter(QSyntaxHighlighter):
@@ -90,6 +91,8 @@ class MarkdownView(QWidget):
     def __init__(self, text='', parent=None):
         super(MarkdownView, self).__init__(parent)
 
+        icon = Icon()
+
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.htmlview = QTextEdit()
@@ -101,13 +104,51 @@ class MarkdownView(QWidget):
         self.previewbtn.clicked.connect(self.viewhtml)
         self.editbtn = QPushButton("Edit")
         self.editbtn.clicked.connect(self.vieweditor)
+        self.discardbtn = QPushButton(icon.DialogCancelButton, "Revert")
+        self.discardbtn.clicked.connect(self.discard)
+        self.discardbtn.setVisible(False)
+        self.savebtn = QPushButton(icon.DialogSaveButton, "Save")
+        self.savebtn.clicked.connect(self.save)
+        self.savebtn.setVisible(False)
+        discardbtnsize = self.discardbtn.minimumSizeHint()
+        savebtnsize = self.savebtn.minimumSizeHint()
+        if discardbtnsize.width() > savebtnsize.width():
+            self.discardbtn.setFixedSize(discardbtnsize)
+            self.savebtn.setFixedSize(discardbtnsize)
+        else:
+            self.discardbtn.setFixedSize(savebtnsize)
+            self.savebtn.setFixedSize(savebtnsize)
+
+        saveshortcut = QShortcut(QKeySequence("Ctrl+S"), self.editview)
+        saveshortcut.activated.connect(lambda: self.save())
+        saveshortcut = QShortcut(QKeySequence("Ctrl+S"), self.htmlview)
+        saveshortcut.activated.connect(lambda: self.save())
+
+        buttongrid = QHBoxLayout()
+        buttongrid.setContentsMargins(0, 0, 0, 0)
+        buttongrid.addWidget(self.editbtn)
+        buttongrid.addWidget(self.previewbtn)
+        buttongrid.addWidget(self.discardbtn)
+        buttongrid.addWidget(self.savebtn)
+        buttonrow = QWidget()
+        buttonrow.setLayout(buttongrid)
+
         self.layout.addWidget(self.editview)
         self.layout.addWidget(self.htmlview)
-        self.layout.addWidget(self.editbtn)
-        self.layout.addWidget(self.previewbtn)
+        self.layout.addWidget(buttonrow)
         self.text = self.editview.document().toPlainText
         self.connectzoomfunctions()
         self.viewhtml()
+        self.readfunc = None
+        self.cache = {}
+        self.currentuid = None
+
+        def textChanged():
+            if self.currentuid is not None:
+                self.cache[self.currentuid]['changed'] = True
+                self.savebtn.setVisible(True)
+                self.discardbtn.setVisible(True)
+        self.editview.textChanged.connect(textChanged)
 
     def viewhtml(self):
         from markdown import markdown
@@ -152,9 +193,52 @@ class MarkdownView(QWidget):
         self.htmlview.wheelEvent = zoomhtml
         self.editview.wheelEvent = zoomeditor
 
-    def settext(self, newtext):
-        self.editview.setPlainText(newtext)
+    def read(self, uid):
+        if self.currentuid is not None:
+            if self.currentuid in self.cache \
+               and self.cache[self.currentuid]['changed']:
+                self.cache[self.currentuid]['text'] = self.text()
+
+        self.savebtn.setVisible(False)
+        self.discardbtn.setVisible(False)
+        if uid in self.cache and 'text' in self.cache[uid]:
+            text = self.cache[uid]['text']
+            if self.cache[uid]['changed']:
+                self.savebtn.setVisible(True)
+                self.discardbtn.setVisible(True)
+        elif self.readfunc is not None:
+            self.cache[uid] = {'changed': False}
+            text = self.readfunc(uid)
+        else:
+            uid = None
+            text = ''
+
+        self.currentuid = None
+        self.editview.setPlainText(text)
+        self.currentuid = uid
         self.viewhtml()
+
+    def save(self):
+        if self.savefunc is None:
+            return
+        if self.currentuid is None:
+            return
+        if self.currentuid not in self.cache:
+            return
+        self.savefunc(self.currentuid, self.text())
+        self.cache[self.currentuid]['changed'] = False
+        self.savebtn.setVisible(False)
+        self.discardbtn.setVisible(False)
+        if 'text' in self.cache[self.currentuid]:
+            del self.cache[self.currentuid]['text']
+
+    def discard(self):
+        if self.currentuid not in self.cache:
+            return
+        del self.cache[self.currentuid]
+        uid = self.currentuid
+        self.currentuid = None
+        self.read(uid)
 
 
 if __name__ == '__main__':
