@@ -19,33 +19,37 @@ class AttributeView(QWidget):
         def active(s):
             if self.currentuid is None:
                 return
-            data = self.db.root.find_item(self.currentuid)
+            data = self.db.find(self.currentuid)
             data.active = True if s == Qt.Checked else False
             self.read(self.currentuid)
+            self.db.reload()
         self.active.stateChanged.connect(active)
 
         def derived(s):
             if self.currentuid is None:
                 return
-            data = self.db.root.find_item(self.currentuid)
+            data = self.db.find(self.currentuid)
             data.derived = True if s == Qt.Checked else False
             self.read(self.currentuid)
+            self.db.reload()
         self.derived.stateChanged.connect(derived)
 
         def normative(s):
             if self.currentuid is None:
                 return
-            data = self.db.root.find_item(self.currentuid)
+            data = self.db.find(self.currentuid)
             data.normative = True if s == Qt.Checked else False
             self.read(self.currentuid)
+            self.db.reload()
         self.normative.stateChanged.connect(normative)
 
         def heading(s):
             if self.currentuid is None:
                 return
-            data = self.db.root.find_item(self.currentuid)
+            data = self.db.find(self.currentuid)
             data.heading = True if s == Qt.Checked else False
             self.read(self.currentuid)
+            self.db.reload()
         self.heading.stateChanged.connect(heading)
 
         grid.addWidget(self.active)
@@ -65,7 +69,7 @@ class AttributeView(QWidget):
         self.currentuid = None
         if self.db is None:
             return
-        data = self.db.root.find_item(uid)
+        data = self.db.find(uid)
         self.active.setCheckState(Qt.Checked if data.active else Qt.Unchecked)
         self.derived.setCheckState(Qt.Checked if data.derived else Qt.Unchecked)
         self.normative.setCheckState(Qt.Checked if data.normative else Qt.Unchecked)

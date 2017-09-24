@@ -30,6 +30,13 @@ class ReqDatabase(object):
         for l in self.listeners:
             l.connectdb(self)
 
+    def find(self, uid):
+        for document in self.root:
+            for item in document:
+                if str(item.uid) == uid:
+                    return item
+        return None
+
 
 if __name__ == '__main__':
     import sys
@@ -53,9 +60,9 @@ if __name__ == '__main__':
 
     db = ReqDatabase()
     db.add_listeners(attribview)
-    v.readfunc = lambda uid: db.root.find_item(uid).text
+    v.readfunc = lambda uid: db.find(uid).text
     def savefunc(uid, text):
-        db.root.find_item(uid).text = text
+        db.find(uid).text = text
     v.savefunc = savefunc
     db.add_listeners([tree, createcatdiag])
 
