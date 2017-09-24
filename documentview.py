@@ -4,6 +4,39 @@ from PyQt5.QtWidgets import *
 from icon import Icon
 
 
+class CategorySelector(QWidget):
+    def __init__(self, parent=None):
+        super(CategorySelector, self).__init__(parent)
+        self.grid = QHBoxLayout()
+        self.grid.setSpacing(10)
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.combo = QComboBox()
+        icons = Icon()
+        self.newcatbtn = QPushButton(icons.FileDialogNewFolder, '')
+        self.newcatbtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.grid.addWidget(self.combo)
+        self.grid.addWidget(self.newcatbtn)
+        self.setLayout(self.grid)
+        self.db = None
+
+    def connectdb(self, db):
+        self.db = db
+        self.buildlist()
+
+    def buildlist(self):
+        if self.db is None or len(self.db.documents) == 0:
+            return
+        self.combo.clear()
+        graph = self.db.draw().split('\n')
+        self.combo.addItems([x for x in graph if x.split()[-1].isidentifier()])
+
+    def callback(self, func):
+        def clb(index):
+            cat = self.combo.itemText(index).split()[-1]
+            func(cat)
+        self.combo.currentIndexChanged.connect(clb)
+
+
 class DocumentTreeView(QWidget):
     def __init__(self, parent=None):
         super(DocumentTreeView, self).__init__(parent)
@@ -12,6 +45,9 @@ class DocumentTreeView(QWidget):
         self.tree.header().hide()
         self.tree.setIndentation(20)
         self.model = QStandardItemModel()
+
+        self.catselector = CategorySelector()
+        self.catselector.callback(self.buildtree)
 
         self.db = None
         self.editview = None
@@ -39,6 +75,7 @@ class DocumentTreeView(QWidget):
         self.tree.setModel(self.model)
 
         self.grid = QVBoxLayout()
+        self.grid.addWidget(self.catselector)
         self.grid.addWidget(self.tree)
         self.setLayout(self.grid)
 
@@ -72,6 +109,7 @@ class DocumentTreeView(QWidget):
         menu.popup(self.tree.mapToGlobal(pos))
 
     def buildtree(self, cat=None):
+        self.model.clear()
         if self.db is None or len(self.db.documents) == 0:
             return
         if cat is None:
@@ -91,10 +129,12 @@ class DocumentTreeView(QWidget):
                 items[up].appendRow(item)
             else:
                 self.model.appendRow(item)
+        self.tree.setCurrentIndex(self.model.index(0, 0))
 
     def connectdb(self, db):
         self.db = db
         self.buildtree()
+        self.catselector.connectdb(db)
 
     def connectview(self, view):
         self.editview = view
