@@ -7,6 +7,7 @@ from markdownview import MarkdownView
 import doorstop
 from documentview import DocumentTreeView
 from createcatdiag import CreateCategoryDialog
+from attributeview import AttributeView
 
 
 class ReqDatabase(object):
@@ -40,20 +41,32 @@ if __name__ == '__main__':
     v = MarkdownView()
     createcatdiag = CreateCategoryDialog()
 
+    attribview = AttributeView()
+
     tree = DocumentTreeView()
     tree.connectview(v)
     tree.connectcreatecatdiag(createcatdiag)
-    tree.selectionclb = lambda x: v.read(x)
+    def selectfunc(uid):
+        attribview.read(uid)
+        v.read(uid)
+    tree.selectionclb = selectfunc
 
     db = ReqDatabase()
+    db.add_listeners(attribview)
     v.readfunc = lambda uid: db.root.find_item(uid).text
     def savefunc(uid, text):
         db.root.find_item(uid).text = text
     v.savefunc = savefunc
     db.add_listeners([tree, createcatdiag])
 
+    editor = QWidget()
+    editorgrid = QVBoxLayout()
+    editorgrid.addWidget(attribview)
+    editorgrid.addWidget(v)
+    editor.setLayout(editorgrid)
+
     splitter.addWidget(tree)
-    splitter.addWidget(v)
+    splitter.addWidget(editor)
     splitter.setSizes([320, 768])
 
     splitter.show()

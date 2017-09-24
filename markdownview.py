@@ -94,6 +94,7 @@ class MarkdownView(QWidget):
         icon = Icon()
 
         self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
         self.htmlview = QTextEdit()
         self.htmlview.setReadOnly(True)
