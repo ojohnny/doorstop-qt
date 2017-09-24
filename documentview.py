@@ -39,10 +39,10 @@ class DocumentTreeView(QWidget):
                 di = deselected.indexes()
                 if selected and deselected:
                     if len(di) > 0:
-                        data = self.model.data(di[0], Qt.UserRole + 2)
+                        data = self.model.data(di[0], Qt.UserRole)
                         data.text = self.editview.text()
                 if len(si) > 0:
-                    data = self.model.data(si[0], Qt.UserRole + 2)
+                    data = self.model.data(si[0], Qt.UserRole)
                     self.editview.settext(data.text)
                 else:
                     self.editview.settext('')
@@ -76,7 +76,7 @@ class DocumentTreeView(QWidget):
                 if sibling:
                     parent = self.model.itemFromIndex(si[0]).parent()
                     if parent is not None:
-                        data = self.model.data(self.model.indexFromItem(parent), Qt.UserRole + 2)
+                        data = self.model.data(self.model.indexFromItem(parent), Qt.UserRole)
                         level = str(data.level).split('.')
                         lastsibling = parent.child(parent.rowCount() - 1)
                 else:
@@ -86,7 +86,7 @@ class DocumentTreeView(QWidget):
                         lastsibling = cur
                     else:
                         lastsibling = cur.child(rows - 1)
-                    data = self.model.data(si[0], Qt.UserRole + 2)
+                    data = self.model.data(si[0], Qt.UserRole)
                     level = str(data.level)
 
             if lastsibling is None:
@@ -94,7 +94,7 @@ class DocumentTreeView(QWidget):
                 lastsibling = self.model.itemFromIndex(self.model.index(rows - 1, 0))
                 level = ['1']
 
-            data = self.model.data(self.model.indexFromItem(lastsibling), Qt.UserRole + 2)
+            data = self.model.data(self.model.indexFromItem(lastsibling), Qt.UserRole)
             if data is not None:
                 level = str(data.level).split('.')[:len(level)]
                 level[-1] = str(int(level[-1]) + 1)
@@ -111,7 +111,7 @@ class DocumentTreeView(QWidget):
             act.setEnabled(False)
             menu.addSeparator()
 
-            data = self.model.data(si[0], Qt.UserRole + 2)
+            data = self.model.data(si[0], Qt.UserRole)
             act = menu.addAction(self.icons.FileIcon, 'Create sibling document')
             act.triggered.connect(lambda: createdocument())
             act = menu.addAction(self.icons.FileIcon, 'Create child document')
@@ -150,7 +150,7 @@ class DocumentTreeView(QWidget):
             level = str(doc.level)
             title = '{} {}{:03}'.format(level, doc.prefix, doc.number)
             item = QStandardItem(title)
-            item.setData(doc, Qt.UserRole + 2)
+            item.setData(doc, Qt.UserRole)
             items[level] = item
             up = level.split('.')
             up[-1] = '0'
@@ -180,7 +180,7 @@ class DocumentTreeView(QWidget):
         self.newcatbtn.clicked.connect(self.createcatdiag.show)
 
     def uidfromindex(self, index):
-        data = self.model.data(index, role=Qt.UserRole + 2)
+        data = self.model.data(index, role=Qt.UserRole)
         if data is not None:
             return str(data.uid)
         return None
