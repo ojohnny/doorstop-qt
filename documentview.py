@@ -60,6 +60,11 @@ class DocumentTreeView(QWidget):
         self.grid.addWidget(self.tree)
         self.setLayout(self.grid)
 
+        self.lastselected = {}
+        self.collapsed = set()
+        self.tree.collapsed.connect(lambda x: self.collapsed.add(self.uidfromindex(x)))
+        self.tree.expanded.connect(lambda x: self.collapsed.discard(self.uidfromindex(x)))
+
     def contextmenu(self, pos):
         menu = QMenu(parent=self.tree)
         si = self.tree.selectedIndexes()
@@ -132,6 +137,7 @@ class DocumentTreeView(QWidget):
         menu.popup(self.tree.mapToGlobal(pos))
 
     def buildtree(self, cat=None):
+        self.lastselected[str(self.category)] = self.selecteduid()
         self.model.clear()
         if self.db is None or len(self.db.root.documents) == 0:
             return
@@ -153,7 +159,13 @@ class DocumentTreeView(QWidget):
                 items[up].appendRow(item)
             else:
                 self.model.appendRow(item)
-        self.tree.setCurrentIndex(self.model.index(0, 0))
+            index = self.model.indexFromItem(item)
+            if str(doc.uid) not in self.collapsed:
+                self.tree.expand(index)
+            if str(cat) in self.lastselected and str(doc.uid) == self.lastselected[str(cat)]:
+                self.tree.setCurrentIndex(index)
+        if len(self.tree.selectedIndexes()) == 0:
+            self.tree.setCurrentIndex(self.model.index(0, 0))
 
     def connectdb(self, db):
         self.db = db
@@ -166,3 +178,15 @@ class DocumentTreeView(QWidget):
     def connectcreatecatdiag(self, createcatdiag):
         self.createcatdiag = createcatdiag
         self.newcatbtn.clicked.connect(self.createcatdiag.show)
+
+    def uidfromindex(self, index):
+        data = self.model.data(index, role=Qt.UserRole + 2)
+        if data is not None:
+            return str(data.uid)
+        return None
+
+    def selecteduid(self):
+        selected = self.tree.selectedIndexes()
+        if len(selected) > 0:
+            return self.uidfromindex(selected[0])
+        return None
