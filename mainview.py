@@ -63,6 +63,7 @@ if __name__ == '__main__':
     v.readfunc = lambda uid: db.find(uid).text
     def savefunc(uid, text):
         db.find(uid).text = text
+        tree.updateuid(uid)
     v.savefunc = savefunc
     db.add_listeners([tree, createcatdiag])
 

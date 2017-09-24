@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from icon import Icon
 from categoryselector import CategorySelector
+from markdown import markdown
 
 
 class DocumentTreeView(QWidget):
@@ -55,6 +56,8 @@ class DocumentTreeView(QWidget):
         self.collapsed = set()
         self.tree.collapsed.connect(lambda x: self.collapsed.add(self.uidfromindex(x)))
         self.tree.expanded.connect(lambda x: self.collapsed.discard(self.uidfromindex(x)))
+
+        self.uid_to_item = {}
 
     def contextmenu(self, pos):
         menu = QMenu(parent=self.tree)
@@ -139,12 +142,16 @@ class DocumentTreeView(QWidget):
         items = {}
         for doc in sorted(c, key=lambda x: x.level):
             level = str(doc.level)
-            title = '{} {}{:03}'.format(level, doc.prefix, doc.number)
-            item = QStandardItem(title)
+            level = level.split('.')
+            if level[-1] == '0':
+                level = level[:-1]
+            level = '.'.join(level)
+            uid = str(doc.uid)
+            item = QStandardItem()
+            self.uid_to_item[str(doc.uid)] = [item, doc]
             item.setData(doc, Qt.UserRole)
             items[level] = item
-            up = level.split('.')
-            up[-1] = '0'
+            up = level.split('.')[:-1]
             up = '.'.join(up)
             if up != level and up in items:
                 items[up].appendRow(item)
@@ -155,6 +162,7 @@ class DocumentTreeView(QWidget):
                 self.tree.expand(index)
             if str(cat) in self.lastselected and str(doc.uid) == self.lastselected[str(cat)]:
                 self.tree.setCurrentIndex(index)
+            self.updateuid(uid)
         if len(self.tree.selectedIndexes()) == 0:
             self.tree.setCurrentIndex(self.model.index(0, 0))
 
@@ -181,3 +189,19 @@ class DocumentTreeView(QWidget):
         if len(selected) > 0:
             return self.uidfromindex(selected[0])
         return None
+
+    def updateuid(self, uid):
+        if uid not in self.uid_to_item:
+            return
+        item = self.uid_to_item[uid][0]
+        data = self.uid_to_item[uid][1]
+        level = str(data.level)
+        if data.heading:
+            heading = data.text
+            heading = markdown(heading.split('\n')[0])
+            text = QTextDocument()
+            text.setHtml(heading)
+            title = '{} {}'.format(level, text.toPlainText())
+        else:
+            title = '{} {}'.format(level, uid)
+        item.setText(title)
