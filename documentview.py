@@ -2,39 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from icon import Icon
-
-
-class CategorySelector(QWidget):
-    def __init__(self, parent=None):
-        super(CategorySelector, self).__init__(parent)
-        self.grid = QHBoxLayout()
-        self.grid.setSpacing(10)
-        self.grid.setContentsMargins(0, 0, 0, 0)
-        self.combo = QComboBox()
-        icons = Icon()
-        self.newcatbtn = QPushButton(icons.FileDialogNewFolder, '')
-        self.newcatbtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.grid.addWidget(self.combo)
-        self.grid.addWidget(self.newcatbtn)
-        self.setLayout(self.grid)
-        self.db = None
-
-    def connectdb(self, db):
-        self.db = db
-        self.buildlist()
-
-    def buildlist(self):
-        if self.db is None or len(self.db.documents) == 0:
-            return
-        self.combo.clear()
-        graph = self.db.draw().split('\n')
-        self.combo.addItems([x for x in graph if x.split()[-1].isidentifier()])
-
-    def callback(self, func):
-        def clb(index):
-            cat = self.combo.itemText(index).split()[-1]
-            func(cat)
-        self.combo.currentIndexChanged.connect(clb)
+from categoryselector import CategorySelector
 
 
 class DocumentTreeView(QWidget):
@@ -46,12 +14,22 @@ class DocumentTreeView(QWidget):
         self.tree.setIndentation(20)
         self.model = QStandardItemModel()
 
-        self.catselector = CategorySelector()
-        self.catselector.callback(self.buildtree)
-
         self.db = None
         self.editview = None
         self.icons = Icon()
+
+        catselgrid = QHBoxLayout()
+        catselgrid.setSpacing(10)
+        catselgrid.setContentsMargins(0, 0, 0, 0)
+
+        self.catselector = CategorySelector()
+        self.catselector.callback(self.buildtree)
+
+        self.newcatbtn = QPushButton(self.icons.FileDialogNewFolder, '')
+        self.newcatbtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        catselgrid.addWidget(self.catselector)
+        catselgrid.addWidget(self.newcatbtn)
 
         oldSelectionChanged = self.tree.selectionChanged
         def selectionChanged(selected, deselected):
@@ -75,7 +53,9 @@ class DocumentTreeView(QWidget):
         self.tree.setModel(self.model)
 
         self.grid = QVBoxLayout()
-        self.grid.addWidget(self.catselector)
+        catsel = QWidget()
+        catsel.setLayout(catselgrid)
+        self.grid.addWidget(catsel)
         self.grid.addWidget(self.tree)
         self.setLayout(self.grid)
 
@@ -110,11 +90,11 @@ class DocumentTreeView(QWidget):
 
     def buildtree(self, cat=None):
         self.model.clear()
-        if self.db is None or len(self.db.documents) == 0:
+        if self.db is None or len(self.db.root.documents) == 0:
             return
         if cat is None:
-            cat = self.db.documents[0].prefix
-        c = [x for x in self.db if x.prefix == cat][0]
+            cat = self.db.root.documents[0].prefix
+        c = [x for x in self.db.root if x.prefix == cat][0]
         items = {}
         for doc in sorted(c, key=lambda x: x.level):
             level = str(doc.level)
@@ -138,3 +118,7 @@ class DocumentTreeView(QWidget):
 
     def connectview(self, view):
         self.editview = view
+
+    def connectcreatecatdiag(self, createcatdiag):
+        self.createcatdiag = createcatdiag
+        self.newcatbtn.clicked.connect(self.createcatdiag.show)
