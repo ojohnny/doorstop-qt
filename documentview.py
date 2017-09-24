@@ -14,6 +14,7 @@ class DocumentTreeView(QWidget):
         self.tree.setIndentation(20)
         self.model = QStandardItemModel()
 
+        self.category = None
         self.db = None
         self.editview = None
         self.icons = Icon()
@@ -62,6 +63,42 @@ class DocumentTreeView(QWidget):
     def contextmenu(self, pos):
         menu = QMenu(parent=self.tree)
         si = self.tree.selectedIndexes()
+
+        def createdocument(sibling=True):
+            level = None
+            lastsibling = None
+            if len(si) > 0:
+                if sibling:
+                    parent = self.model.itemFromIndex(si[0]).parent()
+                    if parent is not None:
+                        data = self.model.data(self.model.indexFromItem(parent), Qt.UserRole + 2)
+                        level = str(data.level).split('.')
+                        lastsibling = parent.child(parent.rowCount() - 1)
+                else:
+                    cur = self.model.itemFromIndex(si[0])
+                    rows = cur.rowCount()
+                    if rows == 0:
+                        lastsibling = cur
+                    else:
+                        lastsibling = cur.child(rows - 1)
+                    data = self.model.data(si[0], Qt.UserRole + 2)
+                    level = str(data.level)
+
+            if lastsibling is None:
+                rows = self.model.rowCount()
+                lastsibling = self.model.itemFromIndex(self.model.index(rows - 1, 0))
+                level = ['1']
+
+            data = self.model.data(self.model.indexFromItem(lastsibling), Qt.UserRole + 2)
+            if data is not None:
+                level = str(data.level).split('.')[:len(level)]
+                level[-1] = str(int(level[-1]) + 1)
+            if len(level) < 2:
+                level.append('0')
+            level = '.'.join(level)
+            item = self.db.root.add_item(self.category, level=level)
+            self.db.reload()
+
         if len(si) > 0:
             act = menu.addAction(self.icons.DialogSaveButton, 'Commit changes')
             act.setEnabled(False)
@@ -70,16 +107,22 @@ class DocumentTreeView(QWidget):
             menu.addSeparator()
 
             data = self.model.data(si[0], Qt.UserRole + 2)
-            menu.addAction(self.icons.FileIcon, 'Create sibling document')
+            act = menu.addAction(self.icons.FileIcon, 'Create sibling document')
+            act.triggered.connect(lambda: createdocument())
             act = menu.addAction(self.icons.FileIcon, 'Create child document')
+            act.triggered.connect(lambda: createdocument(False))
             if str(data.level).split('.')[-1] != '0':
                 act.setEnabled(False)
 
             menu.addSeparator()
             act = menu.addAction('Remove document')
-            act.setEnabled(False)
+            def removedocument(uid):
+                self.db.root.remove_item(uid)
+                self.db.reload()
+            act.triggered.connect(lambda: removedocument(data.uid))
         else:
-            menu.addAction(self.icons.FileIcon, 'Create document')
+            act = menu.addAction(self.icons.FileIcon, 'Create document')
+            act.triggered.connect(lambda: createdocument())
         menu.addSeparator()
         menu.addAction('Expand all').triggered.connect(lambda: self.tree.expandAll())
         def collapse():
@@ -94,6 +137,7 @@ class DocumentTreeView(QWidget):
             return
         if cat is None:
             cat = self.db.root.documents[0].prefix
+        self.category = cat
         c = [x for x in self.db.root if x.prefix == cat][0]
         items = {}
         for doc in sorted(c, key=lambda x: x.level):
