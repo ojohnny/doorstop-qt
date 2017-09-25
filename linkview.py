@@ -58,4 +58,7 @@ class LinkView(QListView):
             item.setData(d)
             self.model.appendRow(item)
 
+        if self.model.rowCount() < 6:
+            self.model.setRowCount(6)
+
         self.currentuid = uid

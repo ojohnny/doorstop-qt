@@ -139,8 +139,10 @@ class MarkdownView(QWidget):
         self.layout.addWidget(buttonrow)
         self.text = self.editview.document().toPlainText
         self.connectzoomfunctions()
+        self.modeclb = None
         self.viewhtml()
         self.readfunc = None
+        self.savefunc = None
         self.cache = {}
         self.currentuid = None
 
@@ -164,6 +166,8 @@ class MarkdownView(QWidget):
         self.editbtn.setVisible(True)
         self.editview.setVisible(False)
         self.previewbtn.setVisible(False)
+        if self.modeclb:
+            self.modeclb(False)
 
     def vieweditor(self):
         self.editview.setVisible(True)
@@ -171,6 +175,8 @@ class MarkdownView(QWidget):
         self.htmlview.setVisible(False)
         self.editbtn.setVisible(False)
         self.editview.setFocus()
+        if self.modeclb:
+            self.modeclb(True)
 
     def connectzoomfunctions(self):
         def zoomeditor(ev):

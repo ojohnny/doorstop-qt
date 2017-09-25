@@ -1,5 +1,6 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from doorstop.common import DoorstopError
 
 
 class AttributeView(QWidget):
@@ -15,6 +16,12 @@ class AttributeView(QWidget):
         self.derived = QCheckBox('Derived')
         self.normative = QCheckBox('Normative')
         self.heading = QCheckBox('Heading')
+        self.reflabel = QLabel('External ref:')
+        self.refloc = QLabel('')
+        self.ref = QLineEdit()
+        self.reflabel.setVisible(False)
+        self.ref.setVisible(False)
+        self.refloc.setVisible(False)
 
         def active(s):
             if self.currentuid is None:
@@ -52,10 +59,23 @@ class AttributeView(QWidget):
             self.db.reload()
         self.heading.stateChanged.connect(heading)
 
+        def ref():
+            if self.currentuid is None:
+                return
+            data = self.db.find(self.currentuid)
+            data.ref = self.ref.text()
+            self.read(self.currentuid)
+            self.setFocus(False)
+        self.ref.editingFinished.connect(ref)
+        self.ref.returnPressed.connect(ref)
+
         grid.addWidget(self.active)
         grid.addWidget(self.derived)
         grid.addWidget(self.normative)
         grid.addWidget(self.heading)
+        grid.addWidget(self.reflabel)
+        grid.addWidget(self.ref)
+        grid.addWidget(self.refloc)
         grid.addStretch(1)
         self.setLayout(grid)
 
@@ -74,4 +94,34 @@ class AttributeView(QWidget):
         self.derived.setCheckState(Qt.Checked if data.derived else Qt.Unchecked)
         self.normative.setCheckState(Qt.Checked if data.normative else Qt.Unchecked)
         self.heading.setCheckState(Qt.Checked if data.heading else Qt.Unchecked)
+        self.ref.setText(data.ref)
+        self.refloc.setText('')
+        if data.ref != '':
+            try:
+                refloc = data.find_ref()
+            except DoorstopError:
+                self.refloc.setText('(not found)')
+            else:
+                if refloc[1]:
+                    self.refloc.setText('{}:{}'.format(refloc[0], refloc[1]))
+                else:
+                    self.refloc.setText('{}'.format(refloc[0]))
         self.currentuid = uid
+
+    def showref(self, b):
+        if b:
+            self.reflabel.setVisible(True)
+            self.ref.setVisible(True)
+            self.refloc.setVisible(True)
+            self.active.setVisible(False)
+            self.derived.setVisible(False)
+            self.normative.setVisible(False)
+            self.heading.setVisible(False)
+        else:
+            self.reflabel.setVisible(False)
+            self.ref.setVisible(False)
+            self.refloc.setVisible(False)
+            self.active.setVisible(True)
+            self.derived.setVisible(True)
+            self.normative.setVisible(True)
+            self.heading.setVisible(True)

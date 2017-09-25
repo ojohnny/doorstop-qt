@@ -70,6 +70,13 @@ if __name__ == '__main__':
     v.savefunc = savefunc
     db.add_listeners([tree, createcatdiag])
 
+    def modeclb(editmode):
+        if editmode:
+            attribview.showref(True)
+        else:
+            attribview.showref(False)
+    v.modeclb = modeclb
+
     editor = QWidget()
     editorgrid = QVBoxLayout()
     editorgrid.setContentsMargins(0, 0, 0, 0)
