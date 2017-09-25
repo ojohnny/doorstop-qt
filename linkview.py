@@ -58,6 +58,15 @@ class LinkView(QListView):
             item.setData(d)
             self.model.appendRow(item)
 
+        clinks = data.find_child_links()
+        for clink in clinks:
+            d = self.db.find(str(clink))
+            text = QTextDocument()
+            text.setHtml(markdown(d.text.split('\n')[0]))
+            item = QStandardItem('linked from: ' + str(clink) + '\t' + text.toPlainText())
+            item.setData(d)
+            self.model.appendRow(item)
+
         if self.model.rowCount() < 6:
             self.model.setRowCount(6)
 
