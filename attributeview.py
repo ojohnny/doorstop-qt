@@ -22,6 +22,8 @@ class AttributeView(QWidget):
         self.reflabel.setVisible(False)
         self.ref.setVisible(False)
         self.refloc.setVisible(False)
+        self.markreviewed = QPushButton('Mark as reviewed')
+        self.markreviewed.setVisible(False)
 
         def active(s):
             if self.currentuid is None:
@@ -69,6 +71,14 @@ class AttributeView(QWidget):
         self.ref.editingFinished.connect(ref)
         self.ref.returnPressed.connect(ref)
 
+        def markreviewed():
+            if self.currentuid is None:
+                return
+            data = self.db.find(self.currentuid)
+            data.review()
+            self.read(self.currentuid)
+        self.markreviewed.clicked.connect(markreviewed)
+
         grid.addWidget(self.active)
         grid.addWidget(self.derived)
         grid.addWidget(self.normative)
@@ -77,6 +87,7 @@ class AttributeView(QWidget):
         grid.addWidget(self.ref)
         grid.addWidget(self.refloc)
         grid.addStretch(1)
+        grid.addWidget(self.markreviewed)
         self.setLayout(grid)
 
     def connectdb(self, db):
@@ -106,6 +117,10 @@ class AttributeView(QWidget):
                     self.refloc.setText('{}:{}'.format(refloc[0], refloc[1]))
                 else:
                     self.refloc.setText('{}'.format(refloc[0]))
+        if data.reviewed:
+            self.markreviewed.setVisible(False)
+        else:
+            self.markreviewed.setVisible(True)
         self.currentuid = uid
 
     def showref(self, b):
