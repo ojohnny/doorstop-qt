@@ -76,7 +76,9 @@ class AttributeView(QWidget):
                 return
             data = self.db.find(self.currentuid)
             data.review()
+            data.clear()
             self.read(self.currentuid)
+            self.db.reload()
         self.markreviewed.clicked.connect(markreviewed)
 
         grid.addWidget(self.active)
@@ -117,7 +119,7 @@ class AttributeView(QWidget):
                     self.refloc.setText('{}:{}'.format(refloc[0], refloc[1]))
                 else:
                     self.refloc.setText('{}'.format(refloc[0]))
-        if data.reviewed:
+        if data.reviewed and data.cleared:
             self.markreviewed.setVisible(False)
         else:
             self.markreviewed.setVisible(True)

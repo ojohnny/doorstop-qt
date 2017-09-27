@@ -56,10 +56,14 @@ if __name__ == '__main__':
     tree.connectview(v)
     tree.connectcreatecatdiag(createcatdiag)
     def selectfunc(uid):
+        if uid is None:
+            return
         attribview.read(uid)
         linkview.read(uid)
         v.read(uid)
+        tree.read(uid)
     tree.selectionclb = selectfunc
+    linkview.gotoclb = selectfunc
 
     db = ReqDatabase()
     db.add_listeners([attribview, linkview])

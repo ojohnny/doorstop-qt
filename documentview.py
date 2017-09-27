@@ -205,3 +205,11 @@ class DocumentTreeView(QWidget):
         else:
             title = '{} {}'.format(level, uid)
         item.setText(title)
+
+    def read(self, uid):
+        if self.db is None:
+            return
+        item = self.db.find(uid)
+        cat = str(item.parent_documents[0])
+        self.lastselected[cat] = str(uid)
+        self.catselector.select(cat)
