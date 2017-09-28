@@ -65,6 +65,8 @@ if __name__ == '__main__':
     tree.selectionclb = selectfunc
     linkview.gotoclb = selectfunc
 
+    tree.clipboard = lambda x: app.clipboard().setText(x)
+
     db = ReqDatabase()
     db.add_listeners([attribview, linkview])
     v.readfunc = lambda uid: db.find(uid).text

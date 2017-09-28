@@ -59,6 +59,13 @@ class DocumentTreeView(QWidget):
 
         self.uid_to_item = {}
 
+        copyshortcut = QShortcut(QKeySequence("Ctrl+C"), self.tree)
+        def copy():
+            if self.clipboard is None:
+                return
+            return self.clipboard(str(self.selecteduid()))
+        copyshortcut.activated.connect(copy)
+
     def contextmenu(self, pos):
         menu = QMenu(parent=self.tree)
         si = self.tree.selectedIndexes()
