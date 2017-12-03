@@ -67,7 +67,17 @@ if __name__ == '__main__':
 
     tree.clipboard = lambda x: app.clipboard().setText(x)
 
-    db = ReqDatabase()
+    has_started = False
+    while not has_started:
+        try:
+            db = ReqDatabase()
+            has_started = True
+        except:
+            import os
+            f = str(QFileDialog.getExistingDirectory(None, "Select Directory"))
+            if not os.path.isdir(f):
+                f = os.path.dirname(f)
+            os.chdir(f)
     db.add_listeners([attribview, linkview])
     v.readfunc = lambda uid: db.find(uid).text
     def savefunc(uid, text):
