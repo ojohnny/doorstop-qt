@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from icon import Icon
+from .icon import Icon
 
 
 class SimpleMarkdownHighlighter(QSyntaxHighlighter):

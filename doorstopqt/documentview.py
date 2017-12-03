@@ -1,8 +1,8 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from icon import Icon
-from categoryselector import CategorySelector
+from .icon import Icon
+from .categoryselector import CategorySelector
 from markdown import markdown
 
 

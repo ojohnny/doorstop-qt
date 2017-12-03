@@ -3,7 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from markdown import markdown
 import doorstop.core.item
-from icon import Icon
+from .icon import Icon
 
 
 class LinkItemModel(QStandardItemModel):

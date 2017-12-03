@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import *
-from categoryselector import CategorySelector
+from .categoryselector import CategorySelector
 
 
 class CreateCategoryDialog(QDialog):

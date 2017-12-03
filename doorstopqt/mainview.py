@@ -3,12 +3,13 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from markdownview import MarkdownView
+from .markdownview import MarkdownView
 import doorstop
-from documentview import DocumentTreeView
-from createcatdiag import CreateCategoryDialog
-from attributeview import AttributeView
-from linkview import LinkView
+from .documentview import DocumentTreeView
+from .createcatdiag import CreateCategoryDialog
+from .attributeview import AttributeView
+from .linkview import LinkView
+from .version import VERSION
 
 
 class ReqDatabase(object):
@@ -39,12 +40,13 @@ class ReqDatabase(object):
         return None
 
 
-if __name__ == '__main__':
+def main():
     import sys
     app = QApplication(sys.argv)
 
     splitter = QSplitter()
     splitter.resize(1024, 768)
+    splitter.setWindowTitle('doorstop-qt {}'.format(VERSION))
 
     v = MarkdownView()
     createcatdiag = CreateCategoryDialog()
