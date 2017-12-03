@@ -143,7 +143,10 @@ class DocumentTreeView(QWidget):
         if self.db is None or len(self.db.root.documents) == 0:
             return
         if cat is None:
-            cat = self.db.root.documents[0].prefix
+            if self.category is not None:
+                cat = self.category
+            else:
+                cat = self.db.root.documents[0].prefix
         self.category = cat
         c = [x for x in self.db.root if x.prefix == cat][0]
         items = {}
