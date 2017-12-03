@@ -106,12 +106,6 @@ class DocumentTreeView(QWidget):
             self.db.reload()
 
         if len(si) > 0:
-            act = menu.addAction(self.icons.DialogSaveButton, 'Commit changes')
-            act.setEnabled(False)
-            act = menu.addAction(self.icons.DialogDiscardButton, 'Discard changes')
-            act.setEnabled(False)
-            menu.addSeparator()
-
             data = self.model.data(si[0], Qt.UserRole)
             act = menu.addAction(self.icons.FileIcon, 'Create sibling document')
             act.triggered.connect(lambda: createdocument())
