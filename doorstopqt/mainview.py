@@ -39,6 +39,11 @@ class ReqDatabase(object):
                     return item
         return None
 
+    def remove(self, uid):
+        item = self.find(uid)
+        item.delete()
+        self.reload()
+
 
 def main():
     import sys

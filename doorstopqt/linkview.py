@@ -18,12 +18,21 @@ class LinkItemModel(QStandardItemModel):
                 return data
             elif type(data) is tuple:
                 is_parent_link = data[0]
-                is_suspect = data[2]
-                data = data[1]
-                text = QTextDocument()
-                text.setHtml(markdown(data.text.split('\n')[0]))
-                suspect = '[needs review] ' if is_suspect else ''
-                text = suspect + str(data) + '\t' + text.toPlainText()
+                uid = data[1]
+                target = data[2]
+                flags = data[3]
+                title = ''
+                if target is not None:
+                    title = QTextDocument()
+                    title.setHtml(markdown(target.text.split('\n')[0]))
+                    title = title.toPlainText()
+                if 'broken' in flags:
+                    extra = '[broken] '
+                elif 'suspect' in flags:
+                    extra = '[needs review] '
+                else:
+                    extra = ''
+                text = extra + str(uid) + '\t' + title
                 if is_parent_link:
                     return '→ ' + text
                 else:
@@ -95,15 +104,16 @@ class LinkView(QListView):
         if type(data) is not tuple:
             return
 
-        is_suspect = data[2]
-        data = data[1]
+        target = data[2]
+        flags = data[3]
+        is_suspect = 'suspect' in flags
 
-        act = menu.addAction(self.icons.ArrowForward, 'Go to {}'.format(str(data.uid)))
-        act.triggered.connect(lambda: self.goto(data.uid))
-        if data.uid in self.db.find(self.currentuid).links:
+        act = menu.addAction(self.icons.ArrowForward, 'Go to {}'.format(str(target.uid)))
+        act.triggered.connect(lambda: self.goto(target.uid))
+        if target.uid in self.db.find(self.currentuid).links:
             act = menu.addAction('Mark link as reviewed')
             act.setEnabled(is_suspect)
-            act.triggered.connect(lambda: self.review_link(data.uid))
+            act.triggered.connect(lambda: self.review_link(target.uid))
         else:
             act = menu.addAction("Can't mark child links as reviewed")
             act.setEnabled(False)
@@ -128,8 +138,13 @@ class LinkView(QListView):
         for link in data.links:
             d = self.db.find(str(link))
             item = QStandardItem(str(link))
-            suspect = link.stamp != self.db.find(link).stamp()
-            item.setData((True, d, suspect))
+            target = self.db.find(link)
+            flags = set()
+            if target is None:
+                flags.add('broken')
+            elif link.stamp != target.stamp():
+                flags.add('suspect')
+            item.setData((True, link, d, flags))
             item.setEditable(False)
             self.model.appendRow(item)
 
@@ -137,7 +152,7 @@ class LinkView(QListView):
         for clink in clinks:
             d = self.db.find(str(clink))
             item = QStandardItem(str(clink))
-            item.setData((False, d, False))
+            item.setData((False, clink, d, set()))
             item.setEditable(False)
             self.model.appendRow(item)
 

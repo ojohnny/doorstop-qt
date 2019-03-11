@@ -117,8 +117,7 @@ class DocumentTreeView(QWidget):
             menu.addSeparator()
             act = menu.addAction('Remove document')
             def removedocument(uid):
-                self.db.root.remove_item(uid)
-                self.db.reload()
+                self.db.remove(uid)
             act.triggered.connect(lambda: removedocument(data.uid))
         else:
             act = menu.addAction(self.icons.FileIcon, 'Create document')
